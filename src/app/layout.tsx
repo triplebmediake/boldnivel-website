@@ -38,10 +38,14 @@ export const metadata: Metadata = {
     description: 'Identity-rooted leadership development and coaching. Know who you are. Lead with unshakeable confidence.',
     images: [{ url: '/assets/images/app_logo.png', width: 1200, height: 630 }],
   },
-  icons: {
-    icon: [{ url: '/favicon.ico', type: 'image/x-icon' }],
-  },
-};
+icons: {
+  icon: [
+    {
+      url: `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/favicon.ico`,
+      type: 'image/x-icon',
+    },
+  ],
+},
 
 export default function RootLayout({
   children,
