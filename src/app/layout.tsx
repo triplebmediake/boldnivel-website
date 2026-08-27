@@ -47,10 +47,10 @@ icons: {
   ],
 },
 
-export default function RootLayout({
-  children,
+  export default function RootLayout({
+    children,
 }: Readonly<{
-  children: React.ReactNode;
+    children: React.ReactNode;
 }>) {
   return (
     <html lang="en" className={`${fraunces.variable} ${dmSans.variable}`}>
