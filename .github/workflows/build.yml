@@ -32,9 +32,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # ==========================================
-      # BUILD 1 — GITHUB PAGES
-      # ==========================================
+      # --------------------------------------------------
+      # 1. BUILD FOR GITHUB PAGES
+      # --------------------------------------------------
       - name: Build for GitHub Pages
         run: npm run build
         env:
@@ -47,9 +47,9 @@ jobs:
         with:
           path: ./out
 
-      # ==========================================
-      # BUILD 2 — CPANEL
-      # ==========================================
+      # --------------------------------------------------
+      # 2. BUILD FOR CPANEL
+      # --------------------------------------------------
       - name: Clean previous build
         run: rm -rf out
 
@@ -58,13 +58,14 @@ jobs:
         env:
           NEXT_PUBLIC_SITE_URL: https://boldnivel.com
           NEXT_PUBLIC_BASE_PATH: ''
+          GITHUB_PAGES: 'false'
 
       - name: Create cPanel deployment ZIP
         run: |
           cd out
           zip -r ../boldnivel-cpanel.zip .
 
-      - name: Upload cPanel ZIP
+      - name: Upload cPanel deployment artifact
         uses: actions/upload-artifact@v4
         with:
           name: boldnivel-cpanel
