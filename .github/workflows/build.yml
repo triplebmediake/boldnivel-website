@@ -11,6 +11,10 @@ permissions:
   pages: write
   id-token: write
 
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -32,9 +36,12 @@ jobs:
         run: npm run build
         env:
           NEXT_PUBLIC_SITE_URL: https://boldnivel.com
-          GITHUB_PAGES: true
+          GITHUB_PAGES: 'true'
 
-      - name: Upload GitHub Pages artifact
+      - name: Setup GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./out
