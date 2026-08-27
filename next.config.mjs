@@ -11,7 +11,6 @@ const nextConfig = {
 
   distDir: process.env.DIST_DIR || '.next',
 
-  // GitHub Pages hosts the site inside /boldnivel-website/
   ...(isGitHubPages && {
     basePath: '/boldnivel-website',
     trailingSlash: true,
@@ -27,9 +26,8 @@ const nextConfig = {
 
   images: {
     remotePatterns: imageHosts,
-    minimumCacheTTL: 60,
-    qualities: [75, 85, 100],
-  }
+    unoptimized: true,
+  },
 };
 
 export default nextConfig;
