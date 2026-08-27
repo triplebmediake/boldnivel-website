@@ -22,6 +22,56 @@ interface AppImageProps {
     [key: string]: any;
 }
 
+/**
+ * Base path used when the site is deployed to GitHub Pages.
+ *
+ * GitHub Pages serves this repository at:
+ * /boldnivel-website/
+ *
+ * For the eventual production domain (boldnivel.com),
+ * NEXT_PUBLIC_BASE_PATH can be left empty.
+ */
+const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || '';
+
+/**
+ * Resolve local image paths correctly for both:
+ *
+ * GitHub Pages:
+ * /boldnivel-website/founder.jpg
+ *
+ * Production:
+ * /founder.jpg
+ */
+function resolveImagePath(src: string): string {
+    if (!src || BASE_PATH === '') {
+        return src;
+    }
+
+    // Don't modify external URLs
+    if (
+        src.startsWith('http://') ||
+        src.startsWith('https://') ||
+        src.startsWith('//') ||
+        src.startsWith('data:') ||
+        src.startsWith('blob:')
+    ) {
+        return src;
+    }
+
+    // Don't add the base path twice
+    if (src === BASE_PATH || src.startsWith(`${BASE_PATH}/`)) {
+        return src;
+    }
+
+    // Add base path to root-relative paths
+    if (src.startsWith('/')) {
+        return `${BASE_PATH}${src}`;
+    }
+
+    // Also handle relative paths
+    return `${BASE_PATH}/${src}`;
+}
+
 const AppImage = memo(function AppImage({
     src,
     alt,
@@ -40,20 +90,37 @@ const AppImage = memo(function AppImage({
     unoptimized = false,
     ...props
 }: AppImageProps) {
-    const [imageSrc, setImageSrc] = useState(src);
+    const resolvedSrc = useMemo(() => resolveImagePath(src), [src]);
+    const resolvedFallbackSrc = useMemo(
+        () => resolveImagePath(fallbackSrc),
+        [fallbackSrc]
+    );
+
+    const [imageSrc, setImageSrc] = useState(resolvedSrc);
     const [isLoading, setIsLoading] = useState(true);
     const [hasError, setHasError] = useState(false);
 
-    const isExternalUrl = useMemo(() => typeof imageSrc === 'string' && imageSrc.startsWith('http'), [imageSrc]);
+    const isExternalUrl = useMemo(
+        () =>
+            typeof imageSrc === 'string' &&
+            (
+                imageSrc.startsWith('http://') ||
+                imageSrc.startsWith('https://') ||
+                imageSrc.startsWith('//')
+            ),
+        [imageSrc]
+    );
+
     const resolvedUnoptimized = unoptimized || isExternalUrl;
 
     const handleError = useCallback(() => {
-        if (!hasError && imageSrc !== fallbackSrc) {
-            setImageSrc(fallbackSrc);
+        if (!hasError && imageSrc !== resolvedFallbackSrc) {
+            setImageSrc(resolvedFallbackSrc);
             setHasError(true);
         }
+
         setIsLoading(false);
-    }, [hasError, imageSrc, fallbackSrc]);
+    }, [hasError, imageSrc, resolvedFallbackSrc]);
 
     const handleLoad = useCallback(() => {
         setIsLoading(false);
@@ -62,8 +129,17 @@ const AppImage = memo(function AppImage({
 
     const imageClassName = useMemo(() => {
         const classes = [className];
-        if (isLoading) classes.push('bg-gray-200');
-        if (onClick) classes.push('cursor-pointer hover:opacity-90 transition-opacity duration-200');
+
+        if (isLoading) {
+            classes.push('bg-gray-200');
+        }
+
+        if (onClick) {
+            classes.push(
+                'cursor-pointer hover:opacity-90 transition-opacity duration-200'
+            );
+        }
+
         return classes.filter(Boolean).join(' ');
     }, [className, isLoading, onClick]);
 
@@ -91,15 +167,34 @@ const AppImage = memo(function AppImage({
         }
 
         return baseProps;
-    }, [imageSrc, alt, imageClassName, quality, placeholder, blurDataURL, resolvedUnoptimized, priority, loading, handleError, handleLoad, onClick]);
+    }, [
+        imageSrc,
+        alt,
+        imageClassName,
+        quality,
+        placeholder,
+        blurDataURL,
+        resolvedUnoptimized,
+        priority,
+        loading,
+        handleError,
+        handleLoad,
+        onClick,
+    ]);
 
     if (fill) {
         return (
-            <div className="relative" style={{ width: '100%', height: '100%' }}>
+            <div
+                className="relative"
+                style={{ width: '100%', height: '100%' }}
+            >
                 <Image
                     {...imageProps}
                     fill
-                    sizes={sizes || '(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw'}
+                    sizes={
+                        sizes ||
+                        '(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw'
+                    }
                     style={{ objectFit: 'cover' }}
                     {...props}
                 />
