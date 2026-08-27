@@ -27,7 +27,7 @@ const differentiators = [
   },
   {
     icon: 'ShieldCheckIcon',
-    title: 'Faith-Driven Values',
+    title: 'Values Driven',
     description:
       'Grounded in integrity and excellence. Our approach is shaped by values that go beyond professional performance.',
     span: 'lg:col-span-1',
