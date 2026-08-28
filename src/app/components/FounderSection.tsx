@@ -53,7 +53,7 @@ export default function FounderSection() {
           <div className="lg:col-span-5 relative">
             <div className="image-clip-reveal aspect-[4/5] overflow-hidden rounded-lg shadow-2xl">
               <AppImage
-                src="/boldnivel-website/founder.jpg"
+                src="/founder.jpg"
                 alt="Professional African businesswoman in elegant attire, confident posture, warm studio lighting, executive presence, leadership embodied"
                 fill
                 className="object-cover object-top"
