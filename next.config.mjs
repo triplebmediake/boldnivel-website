@@ -1,33 +1,85 @@
-import { imageHosts } from './image-hosts.config.mjs';
+name: Build and Deploy Bold Nivel Website
 
-/** @type {import('next').NextConfig} */
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
 
-const isGitHubPages = process.env.GITHUB_PAGES === 'true';
+permissions:
+  contents: read
+  pages: write
+  id-token: write
 
-const nextConfig = {
-  output: 'export',
+concurrency:
+  group: pages
+  cancel-in-progress: false
 
-  productionBrowserSourceMaps: true,
+jobs:
+  build:
+    runs-on: ubuntu-latest
 
-  distDir: process.env.DIST_DIR || '.next',
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-  ...(isGitHubPages && {
-    basePath: '/boldnivel-website',
-    trailingSlash: true,
-  }),
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
 
-  typescript: {
-    ignoreBuildErrors: true,
-  },
+      - name: Install dependencies
+        run: npm ci
 
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
+      # --------------------------------------------------
+      # BUILD 1: GitHub Pages
+      # --------------------------------------------------
+      - name: Build for GitHub Pages
+        run: npm run build
+        env:
+          NEXT_PUBLIC_SITE_URL: https://boldnivel.com
+          GITHUB_PAGES: 'true'
 
-  images: {
-    remotePatterns: imageHosts,
-    unoptimized: true,
-  },
-};
+      - name: Upload GitHub Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./out
 
-export default nextConfig;
+      # --------------------------------------------------
+      # BUILD 2: cPanel / Production Domain
+      # --------------------------------------------------
+      - name: Clean previous build
+        run: |
+          rm -rf .next
+          rm -rf out
+
+      - name: Build for cPanel
+        run: npm run build
+        env:
+          NEXT_PUBLIC_SITE_URL: https://boldnivel.com
+          GITHUB_PAGES: 'false'
+
+      - name: Create cPanel deployment ZIP
+        run: |
+          cd out
+          zip -r ../boldnivel-cpanel.zip .
+
+      - name: Upload cPanel artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: boldnivel-cpanel
+          path: boldnivel-cpanel.zip
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
